@@ -1,0 +1,55 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: radial-gradient(circle at top, #0f172a, #020617);
+  color: white;
+  overflow: hidden;
+}
+
+/* Floating glass panel */
+.ui {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  padding: 20px;
+  border-radius: 15px;
+
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+
+  box-shadow:
+    0 0 20px rgba(0, 200, 255, 0.2),
+    inset 0 0 10px rgba(255,255,255,0.05);
+}
+
+h1 {
+  margin: 0 0 15px;
+  font-weight: 600;
+}
+
+/* Buttons */
+.controls button {
+  display: block;
+  margin: 5px 0;
+  padding: 10px;
+  width: 180px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: linear-gradient(135deg, #06b6d4, #3b82f6);
+  color: white;
+
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.controls button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #0ea5e9;
+}
+
+#canvas-container {
+  width: 100vw;
+  height: 100vh;
+}
