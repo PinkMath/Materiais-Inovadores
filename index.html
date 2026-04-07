@@ -1,26 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Molecule Viewer</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-<div class="ui">
-  <h1>⚛ Molecule Viewer</h1>
-
-  <div class="controls">
-    <button onclick="loadMolecule('methane')">Methane (CH₄)</button>
-    <button onclick="loadMolecule('co2')">CO₂</button>
-    <button onclick="loadMolecule('benzene')">Benzene</button>
-  </div>
-</div>
-
-<div id="canvas-container"></div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="script.js"></script>
-
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>vintix</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>

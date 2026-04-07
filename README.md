@@ -1,3 +1,3 @@
-# Materiais-Inovadores
+# Vintax
 
 ## NÃO ESQUECER DE FAZER UMA BRANCHE PARA CADA UM
