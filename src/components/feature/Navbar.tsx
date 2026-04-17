@@ -255,15 +255,23 @@ export default function Navbar() {
           <button
             onClick={toggleTheme}
             className={`w-8 h-8 flex items-center justify-center rounded-full border transition-all cursor-pointer ${
-              isDark
-                ? "border-white/10 text-gray-400"
-                : "border-gray-200 text-gray-500"
+              !scrolled && !isLabPage
+                ? "border-white/30 text-white bg-black/30 backdrop-blur-sm"
+                : isDark
+                  ? "border-white/10 text-gray-400"
+                  : "border-gray-200 text-gray-500"
             }`}
           >
             <i className={`text-sm ${isDark ? "ri-sun-line" : "ri-moon-line"}`} />
           </button>
           <button
-            className={`w-8 h-8 flex items-center justify-center cursor-pointer ${isDark ? "text-gray-300 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}
+            className={`w-8 h-8 flex items-center justify-center rounded-full border transition-all cursor-pointer ${
+              !scrolled && !isLabPage
+                ? "border-white/30 text-white bg-black/30 backdrop-blur-sm"
+                : isDark
+                  ? "border-white/10 text-gray-300 hover:text-white"
+                  : "border-gray-200 text-gray-600 hover:text-gray-900"
+            }`}
             onClick={() => setMobileOpen(!mobileOpen)}
           >
             <i className={`text-xl ${mobileOpen ? "ri-close-line" : "ri-menu-3-line"}`} />
@@ -273,7 +281,7 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className={`md:hidden border-t px-6 py-4 flex flex-col gap-1 ${isDark ? "bg-[#0D0F14]/98 border-[#00F5FF]/10" : "bg-white border-gray-100"}`}>
+        <div className={`md:hidden border-t px-6 py-4 flex flex-col gap-1 ${isDark ? "bg-[#0D0F14] border-[#00F5FF]/10" : "bg-white border-gray-100"}`}>
           {homeNavLinks.map((link) => (
             <button
               key={link.key}

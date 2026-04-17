@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "@/hooks/useTheme";
+import LabCompletionOverlay, { type LabCompletionConfig } from "@/pages/labs/components/LabCompletionOverlay";
 
 type Line = { type: "input" | "output" | "error" | "success" | "info" | "banner"; text: string };
 
@@ -68,13 +70,10 @@ function processCommand(cmd: string): Line[] {
 
     case "ls":
       if (args[0] === "-la" || args[0] === "-al" || args[0] === "-a") {
-        o("total 48");
-        o("drwxr-xr-x  2 user user 4096 Apr 12 09:41 .");
-        o("drwxr-xr-x 18 root root 4096 Apr 12 09:00 ..");
-        o("-rw-r--r--  1 user user  412 Apr 12 09:41 .hidden      ← hidden file!");
-        VISIBLEFILES.forEach((f) => o(`-rw-r--r--  1 user user  256 Apr 12 09:41 ${f}`));
+        o(".hidden      ← hidden file!");
+        VISIBLEFILES.forEach((f) => o(f));
       } else {
-        VISIBLEFILES.forEach((f) => o(`-rw-r--r--  ${f}`));
+        VISIBLEFILES.forEach((f) => o(f));
         o("", "info");
         o("💡 Hint: Use 'ls -la' to reveal hidden files.", "info");
       }
@@ -373,7 +372,7 @@ const TerminalComponent = forwardRef<TerminalRef, { isDark: boolean }>(({ isDark
   return (
     <div
       className={`border rounded-2xl overflow-hidden flex flex-col ${termBg}`}
-      style={{ height: "520px" }}
+      style={{ height: "clamp(360px, 55vw, 520px)" }}
       onClick={() => inputRef.current?.focus()}
     >
       <div className={`flex items-center gap-2 px-5 py-3 border-b flex-shrink-0 ${titleBg}`}>
@@ -413,27 +412,39 @@ type Objective = { text: string; cmd: string; explanation: string; done: boolean
 
 export default function TerminalLabPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
   const termRef = useRef<TerminalRef>(null);
   const [completedCmds, setCompletedCmds] = useState<Set<string>>(new Set());
+  const [showCompletion, setShowCompletion] = useState(false);
 
   const objectives: Objective[] = [
-    { text: "Read the help menu", cmd: "help", explanation: "Always start by understanding what tools you have. In real engagements, check what's installed on a compromised machine.", done: false },
-    { text: "List all visible files", cmd: "ls", explanation: "ls shows files in the current directory. First step in post-exploitation filesystem exploration.", done: false },
-    { text: "Find ALL files (including hidden)", cmd: "ls -la", explanation: "Hidden files start with a dot. Always run ls -la — config files, keys, and flags are often hidden.", done: false },
-    { text: "Read the readme", cmd: "cat readme.txt", explanation: "cat reads file contents. Check every readable file — context matters in CTFs and pentests.", done: false },
-    { text: "Expose hardcoded credentials", cmd: "cat config.bak", explanation: "Backup files often contain plaintext secrets. This is one of the most common real-world findings.", done: false },
-    { text: "Find the main flag", cmd: "cat flag.txt", explanation: "In CTFs, flags prove you compromised a target. In pentests, this represents proof-of-access.", done: false },
-    { text: "Discover the hidden flag", cmd: "cat .hidden", explanation: ".hidden files are invisible to basic ls. Always use ls -la to find them.", done: false },
-    { text: "Check password hashes", cmd: "cat users.csv", explanation: "Exported DB tables are goldmines. Hash type (MD5, bcrypt) determines crackability.", done: false },
-    { text: "Crack an MD5 hash", cmd: "crack 5f4dcc3b5aa765d61d8327deb882cf99", explanation: "MD5 hashes crack instantly with rainbow tables. This is why bcrypt/Argon2 exist.", done: false },
-    { text: "Run a port scan", cmd: "nmap 10.0.0.50", explanation: "nmap is the industry standard for network discovery. Essential in every pentest phase.", done: false },
-    { text: "Understand SQL injection", cmd: "sqltest", explanation: "See a live SQL injection bypass. Understanding this from the attacker's side helps you defend against it.", done: false },
-    { text: "Understand XSS attacks", cmd: "xsstest", explanation: "XSS is #3 in OWASP Top 10. Learn how script injection works to write safer web apps.", done: false },
+    { text: t("labs.obj_help_text"), cmd: "help", explanation: t("labs.obj_help_exp"), done: false },
+    { text: t("labs.obj_ls_text"), cmd: "ls", explanation: t("labs.obj_ls_exp"), done: false },
+    { text: t("labs.obj_lsla_text"), cmd: "ls -la", explanation: t("labs.obj_lsla_exp"), done: false },
+    { text: t("labs.obj_readme_text"), cmd: "cat readme.txt", explanation: t("labs.obj_readme_exp"), done: false },
+    { text: t("labs.obj_config_text"), cmd: "cat config.bak", explanation: t("labs.obj_config_exp"), done: false },
+    { text: t("labs.obj_flag_text"), cmd: "cat flag.txt", explanation: t("labs.obj_flag_exp"), done: false },
+    { text: t("labs.obj_hidden_text"), cmd: "cat .hidden", explanation: t("labs.obj_hidden_exp"), done: false },
+    { text: t("labs.obj_users_text"), cmd: "cat users.csv", explanation: t("labs.obj_users_exp"), done: false },
+    { text: t("labs.obj_crack_text"), cmd: "crack 5f4dcc3b5aa765d61d8327deb882cf99", explanation: t("labs.obj_crack_exp"), done: false },
+    { text: t("labs.obj_nmap_text"), cmd: "nmap 10.0.0.50", explanation: t("labs.obj_nmap_exp"), done: false },
+    { text: t("labs.obj_sqltest_text"), cmd: "sqltest", explanation: t("labs.obj_sqltest_exp"), done: false },
+    { text: t("labs.obj_xsstest_text"), cmd: "xsstest", explanation: t("labs.obj_xsstest_exp"), done: false },
   ];
 
-  const markDone = (cmd: string) => setCompletedCmds((prev) => new Set([...prev, cmd]));
+  const allCmds = objectives.map((o) => o.cmd);
+
+  const markDone = (cmd: string) => {
+    setCompletedCmds((prev) => {
+      const next = new Set([...prev, cmd]);
+      if (allCmds.every((c) => next.has(c))) {
+        setTimeout(() => setShowCompletion(true), 800);
+      }
+      return next;
+    });
+  };
 
   const handleObjectiveClick = (cmd: string) => {
     termRef.current?.runCommand(cmd);
@@ -446,6 +457,11 @@ export default function TerminalLabPage() {
     if (match) markDone(cmd);
   };
 
+  const handleReplay = () => {
+    setShowCompletion(false);
+    setCompletedCmds(new Set());
+  };
+
   const bg = isDark ? "bg-[#0A0C10]" : "bg-[#F0F4F8]";
   const cardBg = isDark ? "bg-[#13161E] border-white/5" : "bg-white border-gray-200";
   const topBar = isDark ? "bg-[#0D0F14] border-white/5" : "bg-white border-gray-200";
@@ -455,24 +471,54 @@ export default function TerminalLabPage() {
 
   const completedCount = objectives.filter((o) => completedCmds.has(o.cmd)).length;
 
+  const termConfig: LabCompletionConfig = {
+    badgeLabel: t("completion.badge_label"),
+    title: t("completion.title"),
+    subtitle: t("completion.subtitle"),
+    score: 1000,
+    rankValue: t("completion.rank_value"),
+    accentColor: "#39FF14",
+    certPrefix: t("completion.certificate_id"),
+    completedCount,
+    totalCount: objectives.length,
+    unitLabel: t("labs.objectives"),
+    nextLabRoute: "/labs/sql-injection",
+    nextLabLabel: t("completion.next_lab_btn"),
+    stats: [
+      [t("completion.score_label"), "1000"],
+      [t("completion.flags_label"), t("completion.flags_value")],
+      [t("completion.time_label"), new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })],
+    ],
+    skills: [
+      { label: t("completion.skill_fs"), icon: "ri-folder-open-line", color: "text-amber-400" },
+      { label: t("completion.skill_creds"), icon: "ri-lock-unlock-line", color: "text-rose-400" },
+      { label: t("completion.skill_hash"), icon: "ri-key-line", color: isDark ? "text-[#39FF14]" : "text-emerald-500" },
+      { label: t("completion.skill_network"), icon: "ri-radar-line", color: isDark ? "text-[#00F5FF]" : "text-[#00A8B0]" },
+      { label: t("completion.skill_web"), icon: "ri-bug-line", color: "text-purple-400" },
+    ],
+  };
+
   return (
     <div className={`min-h-screen ${bg} ${textPrimary}`}>
+      {showCompletion && (
+        <LabCompletionOverlay config={termConfig} onReplay={handleReplay} />
+      )}
       <div className={`border-b ${topBar}`}>
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500" />
-            <div className="w-3 h-3 rounded-full bg-yellow-500" />
-            <div className="w-3 h-3 rounded-full bg-[#39FF14]" />
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center gap-3 md:gap-4">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+            <div className="w-2.5 h-2.5 rounded-full bg-[#39FF14]" />
           </div>
-          <span className={`text-xs font-mono ${textMuted}`}>vantix — terminal-lab</span>
+          <span className={`text-xs font-mono hidden sm:block ${textMuted}`}>vantix — terminal-lab</span>
           <button
             onClick={() => navigate("/")}
-            className={`flex items-center gap-2 text-xs font-mono border px-4 py-1.5 rounded-full cursor-pointer transition-colors whitespace-nowrap ${isDark ? "text-gray-400 hover:text-white border-white/10 hover:border-white/30" : "text-gray-500 hover:text-gray-800 border-gray-200 hover:border-gray-400"}`}
+            className={`flex items-center gap-2 text-xs font-mono border px-3 md:px-4 py-1.5 rounded-full cursor-pointer transition-colors whitespace-nowrap ${isDark ? "text-gray-400 hover:text-white border-white/10 hover:border-white/30" : "text-gray-500 hover:text-gray-800 border-gray-200 hover:border-gray-400"}`}
           >
             <span className="w-3 h-3 flex items-center justify-center"><i className="ri-arrow-left-line" /></span>
-            Back
+            {t("labs.back")}
           </button>
-          <div className="ml-auto flex items-center gap-4">
+          <div className="ml-auto flex items-center gap-3">
             <button
               onClick={toggleTheme}
               className={`w-7 h-7 flex items-center justify-center rounded-full border cursor-pointer transition-colors ${isDark ? "border-white/10 text-gray-400 hover:text-white hover:border-white/30" : "border-gray-200 text-gray-500 hover:text-gray-800 hover:border-gray-400"}`}
@@ -482,34 +528,33 @@ export default function TerminalLabPage() {
             </button>
             <div className={`flex items-center gap-2 text-[10px] font-mono ${textMuted}`}>
               <span className={isDark ? "text-[#39FF14]" : "text-emerald-600"}>{completedCount}</span>/<span>{objectives.length}</span>
-              <span>objectives</span>
+              <span className="hidden sm:inline">{t("labs.objectives")}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-10">
-        <div className="mb-8 animate-fade-up">
-          <span className={`text-[10px] font-mono tracking-widest mb-2 block ${isDark ? "text-[#39FF14]" : "text-emerald-600"}`}>[ TERMINAL LAB ]</span>
-          <h1 className={`text-3xl md:text-4xl font-extrabold mb-3 ${textPrimary}`}>Interactive Security Terminal</h1>
-          <p className={`text-sm leading-relaxed max-w-2xl ${textSecondary}`}>
-            A sandboxed Linux-like terminal simulating a <strong className={isDark ? "text-white" : "text-gray-800"}>post-exploitation scenario</strong> — you&apos;ve just gotten shell access on a compromised machine.
-            Explore the filesystem, uncover hidden secrets, crack hashes, and learn the tools used in real-world penetration testing.
-          </p>
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-10">
+        <div className="mb-6 md:mb-8 animate-fade-up">
+          <span className={`text-[10px] font-mono tracking-widest mb-2 block ${isDark ? "text-[#39FF14]" : "text-emerald-600"}`}>{t("labs.terminal_lab_badge")}</span>
+          <h1 className={`text-2xl md:text-4xl font-extrabold mb-3 ${textPrimary}`}>{t("labs.terminal_lab_title")}</h1>
+          <p
+            className={`text-sm leading-relaxed max-w-2xl ${textSecondary}`}
+            dangerouslySetInnerHTML={{ __html: t("labs.terminal_lab_subtitle") }}
+          />
         </div>
 
         {/* Scenario banner */}
         <div className={`border rounded-xl px-5 py-4 mb-8 ${isDark ? "bg-amber-400/5 border-amber-400/20" : "bg-amber-50 border-amber-200"}`}>
-          <p className={`text-[10px] font-mono mb-1 ${isDark ? "text-amber-400" : "text-amber-600"}`}>SCENARIO</p>
+          <p className={`text-[10px] font-mono mb-1 ${isDark ? "text-amber-400" : "text-amber-600"}`}>{t("labs.terminal_scenario_label")}</p>
           <p className={`text-xs leading-relaxed ${isDark ? "text-amber-300" : "text-amber-700"}`}>
-            You&apos;ve exploited a web application and obtained a reverse shell on the target server. Your goal: explore the filesystem,
-            find exposed credentials and flags, and understand what information an attacker can recover from a compromised machine.
+            {t("labs.terminal_scenario_text")}
           </p>
         </div>
 
         {/* Progress */}
         <div className={`border rounded-xl px-5 py-3 mb-8 flex items-center gap-4 ${isDark ? "bg-[#13161E] border-white/5" : "bg-white border-gray-200"}`}>
-          <span className={`text-[10px] font-mono ${textMuted}`}>PROGRESS</span>
+          <span className={`text-[10px] font-mono ${textMuted}`}>{t("labs.progress")}</span>
           <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-gray-200"}`}>
             <div
               className={`h-full rounded-full transition-all duration-700 ${isDark ? "bg-[#39FF14]" : "bg-emerald-500"}`}
@@ -519,12 +564,12 @@ export default function TerminalLabPage() {
           <span className={`text-[10px] font-mono font-bold ${isDark ? "text-[#39FF14]" : "text-emerald-600"}`}>{completedCount}/{objectives.length}</span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-up delay-200">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 animate-fade-up delay-200">
           {/* Terminal */}
           <div className="lg:col-span-2 space-y-4">
             <TerminalComponent ref={termRef} isDark={isDark} />
             <div>
-              <p className={`text-[10px] font-mono mb-2 ${textMuted}`}>QUICK COMMANDS — click to run:</p>
+              <p className={`text-[10px] font-mono mb-2 ${textMuted}`}>{t("labs.terminal_quick_cmds")}</p>
               <div className="flex flex-wrap gap-2">
                 {["help", "ls -la", "cat config.bak", "cat flag.txt", "cat .hidden", "nmap 10.0.0.50", "sqltest", "xsstest", "crack 5f4dcc3b5aa765d61d8327deb882cf99"].map((cmd) => (
                   <button
@@ -546,7 +591,7 @@ export default function TerminalLabPage() {
           {/* Sidebar — objectives */}
           <div className="space-y-4">
             <div className={`border rounded-2xl p-5 ${cardBg}`}>
-              <p className={`text-[10px] font-mono tracking-wider mb-4 ${textMuted}`}>OBJECTIVES — click to run</p>
+              <p className={`text-[10px] font-mono tracking-wider mb-4 ${textMuted}`}>{t("labs.terminal_objectives_label")}</p>
               <div className="space-y-1">
                 {objectives.map((obj) => {
                   const done = completedCmds.has(obj.cmd);
@@ -570,13 +615,13 @@ export default function TerminalLabPage() {
             </div>
 
             <div className={`border rounded-2xl p-5 ${cardBg}`}>
-              <p className={`text-[10px] font-mono tracking-wider mb-4 ${textMuted}`}>KEY CONCEPTS</p>
+              <p className={`text-[10px] font-mono tracking-wider mb-4 ${textMuted}`}>{t("labs.terminal_concepts_label")}</p>
               <div className="space-y-3">
                 {[
-                  { icon: "ri-folder-open-line", color: isDark ? "text-amber-400" : "text-amber-600", title: "Filesystem Recon", desc: "After gaining shell access, enumerate all readable files — configs, backups, keys." },
-                  { icon: "ri-lock-unlock-line", color: isDark ? "text-rose-400" : "text-rose-500", title: "Credential Exposure", desc: "Hardcoded credentials in config files and code are the #1 real-world finding." },
-                  { icon: "ri-key-line", color: isDark ? "text-[#39FF14]" : "text-emerald-600", title: "Hash Cracking", desc: "Weak algorithms (MD5, SHA1) crack instantly. Use bcrypt/Argon2 for passwords." },
-                  { icon: "ri-terminal-box-line", color: isDark ? "text-[#00F5FF]" : "text-[#00A8B0]", title: "Tools of the Trade", desc: "nmap, cat, ls, netstat, whois — these are real tools used by every pentester." },
+                  { icon: "ri-folder-open-line", color: isDark ? "text-amber-400" : "text-amber-600", title: t("labs.concept_fs_title"), desc: t("labs.concept_fs_desc") },
+                  { icon: "ri-lock-unlock-line", color: isDark ? "text-rose-400" : "text-rose-500", title: t("labs.concept_creds_title"), desc: t("labs.concept_creds_desc") },
+                  { icon: "ri-key-line", color: isDark ? "text-[#39FF14]" : "text-emerald-600", title: t("labs.concept_hash_title"), desc: t("labs.concept_hash_desc") },
+                  { icon: "ri-terminal-box-line", color: isDark ? "text-[#00F5FF]" : "text-[#00A8B0]", title: t("labs.concept_tools_title"), desc: t("labs.concept_tools_desc") },
                 ].map((item) => (
                   <div key={item.title} className="flex items-start gap-3">
                     <span className={`w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5 ${item.color}`}>

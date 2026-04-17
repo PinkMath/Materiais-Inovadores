@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "@/hooks/useTheme";
+import LabCompletionOverlay, { type LabCompletionConfig } from "@/pages/labs/components/LabCompletionOverlay";
 
 type Challenge = {
   id: number;
@@ -124,6 +126,7 @@ const challenges: Challenge[] = [
 ];
 
 function SqlTerminal({ challenge, onSolve, isDark }: { challenge: Challenge; onSolve: () => void; isDark: boolean }) {
+  const { t } = useTranslation();
   const [input, setInput] = useState("");
   const [result, setResult] = useState<{ type: "idle" | "success" | "error" | "empty"; rows?: Record<string, string>[]; cols?: string[]; msg?: string }>({ type: "idle" });
   const [showFlag, setShowFlag] = useState(false);
@@ -161,7 +164,7 @@ function SqlTerminal({ challenge, onSolve, isDark }: { challenge: Challenge; onS
         </code>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
         <input
           type="text"
           value={input}
@@ -172,9 +175,9 @@ function SqlTerminal({ challenge, onSolve, isDark }: { challenge: Challenge; onS
         />
         <button
           onClick={run}
-          className={`px-6 py-3 border text-sm font-bold rounded-xl transition-colors cursor-pointer whitespace-nowrap ${isDark ? "bg-[#39FF14]/10 border-[#39FF14]/30 text-[#39FF14] hover:bg-[#39FF14]/20" : "bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100"}`}
+          className={`w-full sm:w-auto px-6 py-3 border text-sm font-bold rounded-xl transition-colors cursor-pointer whitespace-nowrap ${isDark ? "bg-[#39FF14]/10 border-[#39FF14]/30 text-[#39FF14] hover:bg-[#39FF14]/20" : "bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100"}`}
         >
-          Execute
+          {t("labs.execute")}
         </button>
       </div>
 
@@ -225,10 +228,10 @@ function SqlTerminal({ challenge, onSolve, isDark }: { challenge: Challenge; onS
 
       {showFlag && (
         <div className={`border rounded-xl p-4 space-y-2 ${isDark ? "bg-[#39FF14]/5 border-[#39FF14]/30" : "bg-emerald-50 border-emerald-300"}`}>
-          <p className={`text-xs font-bold font-mono tracking-wide ${isDark ? "text-[#39FF14]" : "text-emerald-700"}`}>CHALLENGE COMPLETE</p>
+          <p className={`text-xs font-bold font-mono tracking-wide ${isDark ? "text-[#39FF14]" : "text-emerald-700"}`}>{t("labs.challenge_complete")}</p>
           <div className={`flex items-center gap-3 rounded-lg px-4 py-2.5 ${isDark ? "bg-[#0A0C10]" : "bg-white border border-emerald-200"}`}>
             <i className={`ri-flag-2-fill ${isDark ? "text-[#39FF14]" : "text-emerald-600"}`} />
-            <code className={`text-sm font-mono font-bold flex-1 ${isDark ? "text-[#39FF14]" : "text-emerald-700"}`}>{challenge.flag}</code>
+            <code className={`text-xs md:text-sm font-mono font-bold flex-1 break-all ${isDark ? "text-[#39FF14]" : "text-emerald-700"}`}>{challenge.flag}</code>
           </div>
         </div>
       )}
@@ -238,16 +241,60 @@ function SqlTerminal({ challenge, onSolve, isDark }: { challenge: Challenge; onS
 
 export default function SqlInjectionLab() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
   const [activeChallengeId, setActiveChallengeId] = useState(1);
   const [solved, setSolved] = useState<Set<number>>(new Set());
   const [showHint, setShowHint] = useState(false);
+  const [showCompletion, setShowCompletion] = useState(false);
   const activeChallenge = challenges.find((c) => c.id === activeChallengeId)!;
 
   useEffect(() => { setShowHint(false); }, [activeChallengeId]);
 
-  const handleSolve = () => setSolved((prev) => new Set([...prev, activeChallengeId]));
+  const handleSolve = () => {
+    setSolved((prev) => {
+      const next = new Set([...prev, activeChallengeId]);
+      if (next.size === challenges.length) {
+        setTimeout(() => setShowCompletion(true), 800);
+      }
+      return next;
+    });
+  };
+
+  const handleReplay = () => {
+    setShowCompletion(false);
+    setSolved(new Set());
+    setActiveChallengeId(1);
+  };
+
+  const sqlConfig: LabCompletionConfig = {
+    badgeLabel: t("completion.sql_badge_label"),
+    title: t("completion.sql_title"),
+    subtitle: t("completion.sql_subtitle"),
+    score: 600,
+    rankValue: t("completion.sql_rank_value"),
+    accentColor: "#39FF14",
+    certPrefix: t("completion.sql_cert_prefix"),
+    completedCount: solved.size,
+    totalCount: challenges.length,
+    unitLabel: t("completion.sql_unit_label"),
+    nextLabRoute: "/labs/network",
+    nextLabLabel: t("completion.sql_next_lab_btn"),
+    stats: [
+      [t("completion.score_label"), "600"],
+      [t("completion.sql_challenges_label"), t("completion.sql_challenges_value")],
+      [t("completion.time_label"), new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })],
+    ],
+    skills: [
+      { label: t("completion.sql_skill_auth"), icon: "ri-login-circle-line", color: isDark ? "text-[#00F5FF]" : "text-[#00A8B0]" },
+      { label: t("completion.sql_skill_union"), icon: "ri-git-merge-line", color: "text-amber-400" },
+      { label: t("completion.sql_skill_blind"), icon: "ri-eye-off-line", color: "text-rose-400" },
+      { label: t("completion.sql_skill_error"), icon: "ri-error-warning-line", color: "text-orange-400" },
+      { label: t("completion.sql_skill_stored"), icon: "ri-save-line", color: "text-violet-400" },
+      { label: t("completion.sql_skill_time"), icon: "ri-timer-line", color: isDark ? "text-[#39FF14]" : "text-emerald-500" },
+    ],
+  };
 
   const bg = isDark ? "bg-[#0A0C10]" : "bg-[#F0F4F8]";
   const cardBg = isDark ? "bg-[#13161E] border-white/5" : "bg-white border-gray-200";
@@ -266,22 +313,25 @@ export default function SqlInjectionLab() {
 
   return (
     <div className={`min-h-screen ${bg} ${textPrimary}`} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+      {showCompletion && (
+        <LabCompletionOverlay config={sqlConfig} onReplay={handleReplay} />
+      )}
       <div className={`border-b ${topBar}`}>
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500" />
-            <div className="w-3 h-3 rounded-full bg-yellow-500" />
-            <div className="w-3 h-3 rounded-full bg-[#39FF14]" />
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center gap-3 md:gap-4">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+            <div className="w-2.5 h-2.5 rounded-full bg-[#39FF14]" />
           </div>
-          <span className={`text-xs font-mono ${textMuted}`}>vantix — sql-injection-lab</span>
+          <span className={`text-xs font-mono hidden sm:block ${textMuted}`}>vantix — sql-injection-lab</span>
           <button
             onClick={() => navigate("/")}
-            className={`flex items-center gap-2 text-xs font-mono border px-4 py-1.5 rounded-full cursor-pointer transition-colors whitespace-nowrap ${isDark ? "text-gray-400 hover:text-white border-white/10 hover:border-white/30" : "text-gray-500 hover:text-gray-800 border-gray-200 hover:border-gray-400"}`}
+            className={`flex items-center gap-2 text-xs font-mono border px-3 md:px-4 py-1.5 rounded-full cursor-pointer transition-colors whitespace-nowrap ${isDark ? "text-gray-400 hover:text-white border-white/10 hover:border-white/30" : "text-gray-500 hover:text-gray-800 border-gray-200 hover:border-gray-400"}`}
           >
             <span className="w-3 h-3 flex items-center justify-center"><i className="ri-arrow-left-line" /></span>
-            Back
+            {t("labs.back")}
           </button>
-          <div className="ml-auto flex items-center gap-4">
+          <div className="ml-auto flex items-center gap-3">
             <button
               onClick={toggleTheme}
               className={`w-7 h-7 flex items-center justify-center rounded-full border cursor-pointer transition-colors ${isDark ? "border-white/10 text-gray-400 hover:text-white hover:border-white/30" : "border-gray-200 text-gray-500 hover:text-gray-800 hover:border-gray-400"}`}
@@ -291,16 +341,16 @@ export default function SqlInjectionLab() {
             </button>
             <div className={`flex items-center gap-2 text-[10px] font-mono ${textMuted}`}>
               <span className={isDark ? "text-[#39FF14]" : "text-emerald-600"}>{solved.size}</span>/<span>{challenges.length}</span>
-              <span>solved</span>
+              <span className="hidden sm:inline">{t("labs.solved")}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-10">
-        <div className="mb-8 animate-fade-up">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-10">
+        <div className="mb-6 md:mb-8 animate-fade-up">
           <span className={`text-[10px] font-mono tracking-widest mb-2 block ${isDark ? "text-[#39FF14]" : "text-emerald-600"}`}>[ SQL INJECTION LAB ]</span>
-          <h1 className={`text-3xl md:text-4xl font-extrabold mb-3 ${textPrimary}`}>SQL Injection Basics</h1>
+          <h1 className={`text-2xl md:text-4xl font-extrabold mb-3 ${textPrimary}`}>SQL Injection Basics</h1>
           <p className={`text-sm leading-relaxed max-w-2xl ${textSecondary}`}>
             Learn how SQL injection attacks work in a safe, sandboxed environment. No real databases are touched.
             Complete all 6 challenges to master SQLi from basics to advanced techniques.
@@ -335,7 +385,7 @@ export default function SqlInjectionLab() {
 
         {/* Progress bar */}
         <div className={`border rounded-xl px-5 py-3 mb-8 flex items-center gap-4 ${isDark ? "bg-[#13161E] border-white/5" : "bg-white border-gray-200"}`}>
-          <span className={`text-[10px] font-mono ${textMuted}`}>PROGRESS</span>
+          <span className={`text-[10px] font-mono ${textMuted}`}>{t("labs.progress")}</span>
           <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-gray-200"}`}>
             <div
               className={`h-full rounded-full transition-all duration-700 ${isDark ? "bg-[#39FF14]" : "bg-emerald-500"}`}
@@ -345,32 +395,34 @@ export default function SqlInjectionLab() {
           <span className={`text-[10px] font-mono font-bold ${isDark ? "text-[#39FF14]" : "text-emerald-600"}`}>{solved.size}/{challenges.length}</span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 animate-fade-up delay-300">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 animate-fade-up delay-300">
           {/* Challenge list */}
-          <div className="lg:col-span-1 space-y-2">
-            <p className={`text-[10px] font-mono tracking-wider mb-3 ${textMuted}`}>CHALLENGES</p>
-            {challenges.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setActiveChallengeId(c.id)}
-                className={`w-full text-left p-4 rounded-xl border cursor-pointer transition-all ${
-                  activeChallengeId === c.id
-                    ? isDark ? "bg-[#39FF14]/5 border-[#39FF14]/30 text-white" : "bg-emerald-50 border-emerald-300 text-gray-900"
-                    : isDark ? "bg-[#13161E] border-white/5 hover:border-white/10 text-gray-400 hover:text-white" : "bg-white border-gray-100 hover:border-gray-300 text-gray-500 hover:text-gray-800"
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className={`text-[10px] font-mono ${textMuted}`}>#{c.id}</span>
-                  {solved.has(c.id) && (
-                    <span className={`w-4 h-4 flex items-center justify-center ${isDark ? "text-[#39FF14]" : "text-emerald-500"}`}>
-                      <i className="ri-checkbox-circle-fill text-xs" />
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs font-semibold leading-snug">{c.title}</p>
-                <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded border mt-1.5 inline-block ${categoryColors[c.category] ?? textMuted}`}>{c.category}</span>
-              </button>
-            ))}
+          <div className="lg:col-span-1">
+            <p className={`text-[10px] font-mono tracking-wider mb-3 ${textMuted}`}>{t("labs.challenges")}</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-2">
+              {challenges.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setActiveChallengeId(c.id)}
+                  className={`w-full text-left p-3 md:p-4 rounded-xl border cursor-pointer transition-all ${
+                    activeChallengeId === c.id
+                      ? isDark ? "bg-[#39FF14]/5 border-[#39FF14]/30 text-white" : "bg-emerald-50 border-emerald-300 text-gray-900"
+                      : isDark ? "bg-[#13161E] border-white/5 hover:border-white/10 text-gray-400 hover:text-white" : "bg-white border-gray-100 hover:border-gray-300 text-gray-500 hover:text-gray-800"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className={`text-[10px] font-mono ${textMuted}`}>#{c.id}</span>
+                    {solved.has(c.id) && (
+                      <span className={`w-4 h-4 flex items-center justify-center ${isDark ? "text-[#39FF14]" : "text-emerald-500"}`}>
+                        <i className="ri-checkbox-circle-fill text-xs" />
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs font-semibold leading-snug">{c.title}</p>
+                  <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded border mt-1.5 inline-block ${categoryColors[c.category] ?? textMuted}`}>{c.category}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Active challenge */}
@@ -404,7 +456,7 @@ export default function SqlInjectionLab() {
                   className={`flex items-center gap-2 text-xs cursor-pointer transition-colors whitespace-nowrap ${isDark ? "text-gray-500 hover:text-amber-400" : "text-gray-400 hover:text-amber-600"}`}
                 >
                   <span className="w-4 h-4 flex items-center justify-center"><i className="ri-lightbulb-line" /></span>
-                  {showHint ? "Hide hint" : "Show hint"}
+                  {showHint ? t("labs.hide_hint") : t("labs.show_hint")}
                 </button>
                 {showHint && (
                   <div className={`mt-3 border rounded-lg px-4 py-3 ${isDark ? "bg-amber-400/5 border-amber-400/20" : "bg-amber-50 border-amber-200"}`}>

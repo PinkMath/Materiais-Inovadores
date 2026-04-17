@@ -597,12 +597,12 @@ function ToolRow({ tool, active, onToggle, isDark }: ToolRowProps) {
         ? `${isDark ? "bg-[#13161E]" : "bg-white"} ${colors.border}`
         : `${isDark ? "bg-[#13161E] border-white/5 hover:border-white/10" : "bg-white border-gray-100 hover:border-gray-200"}`
     }`}>
-      <button onClick={onToggle} className="w-full flex items-center gap-5 px-6 py-5 cursor-pointer group">
-        <div className={`w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-xl border ${colors.icon}`}>
-          <i className={`${tool.icon} text-xl`} />
+      <button onClick={onToggle} className="w-full flex items-center gap-3 md:gap-5 px-4 md:px-6 py-4 md:py-5 cursor-pointer group">
+        <div className={`w-10 h-10 md:w-11 md:h-11 flex-shrink-0 flex items-center justify-center rounded-xl border ${colors.icon}`}>
+          <i className={`${tool.icon} text-lg md:text-xl`} />
         </div>
         <div className="flex-1 text-left min-w-0">
-          <div className="flex items-center gap-3 mb-0.5">
+          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
             <p className={`text-[10px] font-mono tracking-wide ${isDark ? "text-gray-500" : "text-gray-400"}`}>{tool.category}</p>
             <span className={`text-[10px] font-bold font-mono tracking-widest px-2 py-0.5 rounded-full border ${colors.badge}`}>{tool.badge}</span>
           </div>
@@ -621,8 +621,8 @@ function ToolRow({ tool, active, onToggle, isDark }: ToolRowProps) {
       </button>
 
       <div className={`transition-all duration-500 ease-in-out overflow-hidden ${active ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"}`}>
-        <div className="px-6 pb-6">
-          <p className={`text-xs leading-relaxed mb-5 border-t pt-4 ${isDark ? "text-gray-400 border-white/5" : "text-gray-500 border-gray-100"}`}>{tool.description}</p>
+        <div className="px-4 md:px-6 pb-5 md:pb-6">
+          <p className={`text-xs leading-relaxed mb-4 md:mb-5 border-t pt-4 ${isDark ? "text-gray-400 border-white/5" : "text-gray-500 border-gray-100"}`}>{tool.description}</p>
           {Widget && <Widget />}
         </div>
       </div>
@@ -638,11 +638,11 @@ export default function ToolsSection() {
   const toggle = (id: number) => setActiveId((prev) => (prev === id ? null : id));
 
   return (
-    <section id="tools" className={`py-24 px-6 ${isDark ? "bg-[#0D0F14]" : "bg-[#F0F4F8]"}`}>
+    <section id="tools" className={`py-16 md:py-24 px-4 md:px-6 ${isDark ? "bg-[#0D0F14]" : "bg-[#F0F4F8]"}`}>
       <div className="max-w-[1400px] mx-auto">
-        <div data-reveal="" className="text-center mb-14">
+        <div data-reveal="" className="text-center mb-10 md:mb-14">
           <span className={`text-xs font-mono font-semibold tracking-widest mb-3 block ${isDark ? "text-[#39FF14]" : "text-emerald-600"}`}>[ {t("tools.section_label")} ]</span>
-          <h2 className={`text-4xl md:text-5xl font-extrabold leading-tight mb-4 ${isDark ? "text-white" : "text-gray-900"}`}>{t("tools.section_title")}</h2>
+          <h2 className={`text-3xl md:text-5xl font-extrabold leading-tight mb-4 ${isDark ? "text-white" : "text-gray-900"}`}>{t("tools.section_title")}</h2>
           <p className={`max-w-2xl mx-auto text-sm leading-relaxed ${isDark ? "text-gray-400" : "text-gray-500"}`}>{t("tools.section_subtitle")}</p>
         </div>
 

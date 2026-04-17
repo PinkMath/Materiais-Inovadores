@@ -115,15 +115,15 @@ export default function HeroBanner() {
       <ParticleCanvas isDark={isDark} />
       <div className={`absolute inset-0 ${isDark ? "bg-gradient-to-b from-[#0D0F14]/60 via-[#0D0F14]/40 to-[#0D0F14]/80" : "bg-gradient-to-b from-[#F0F4F8]/60 via-[#F0F4F8]/40 to-[#F0F4F8]/80"}`} />
 
-      <div className="relative z-10 w-full flex flex-col items-center text-center px-6 pt-24 pb-16">
-        <div className="inline-flex items-center gap-2 border border-[#00F5FF]/40 rounded-full px-4 py-1.5 mb-8 animate-fade-up">
+      <div className="relative z-10 w-full flex flex-col items-center text-center px-4 md:px-6 pt-24 pb-12 md:pb-16">
+        <div className="inline-flex items-center gap-2 border border-[#00F5FF]/40 rounded-full px-4 py-1.5 mb-6 md:mb-8 animate-fade-up">
           <span className="w-1.5 h-1.5 rounded-full bg-[#00F5FF] animate-pulse" />
           <span className="text-xs font-mono font-semibold tracking-widest text-[#00F5FF]">
             {t("hero.badge")}
           </span>
         </div>
 
-        <h1 className={`text-5xl md:text-7xl font-extrabold leading-tight mb-6 max-w-4xl animate-fade-up delay-100 ${isDark ? "text-white" : "text-gray-900"}`}>
+        <h1 className={`text-4xl sm:text-5xl md:text-7xl font-extrabold leading-tight mb-5 md:mb-6 max-w-4xl animate-fade-up delay-100 ${isDark ? "text-white" : "text-gray-900"}`}>
           {t("hero.title1")}{" "}
           <span className="text-[#00F5FF]" style={{ textShadow: isDark ? "0 0 30px rgba(0,245,255,0.6)" : "none" }}>
             {t("hero.title2")}
@@ -135,14 +135,14 @@ export default function HeroBanner() {
           </span>
         </h1>
 
-        <p className={`text-lg max-w-2xl mb-10 leading-relaxed animate-fade-up delay-200 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
+        <p className={`text-base md:text-lg max-w-2xl mb-8 md:mb-10 leading-relaxed animate-fade-up delay-200 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
           {t("hero.subtitle")}
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4 mb-16 animate-fade-up delay-300">
+        <div className="flex flex-col sm:flex-row items-center gap-3 md:gap-4 mb-12 md:mb-16 animate-fade-up delay-300 w-full sm:w-auto">
           <a
             href="#tutorials"
-            className="flex items-center gap-3 bg-[#00F5FF] text-[#0D0F14] font-bold text-sm px-8 py-3.5 rounded-full hover:bg-[#00F5FF]/90 transition-all duration-200 cursor-pointer whitespace-nowrap"
+            className="w-full sm:w-auto flex items-center justify-center gap-3 bg-[#00F5FF] text-[#0D0F14] font-bold text-sm px-8 py-3.5 rounded-full hover:bg-[#00F5FF]/90 transition-all duration-200 cursor-pointer whitespace-nowrap"
           >
             <span className="w-5 h-5 flex items-center justify-center">
               <i className="ri-shield-flash-line" />
@@ -154,7 +154,7 @@ export default function HeroBanner() {
           </a>
           <a
             href="#news"
-            className={`flex items-center gap-3 border font-bold text-sm px-8 py-3.5 rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap ${
+            className={`w-full sm:w-auto flex items-center justify-center gap-3 border font-bold text-sm px-8 py-3.5 rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap ${
               isDark
                 ? "border-[#00F5FF]/50 text-[#00F5FF] hover:border-[#00F5FF] hover:bg-[#00F5FF]/10"
                 : "border-[#00A8B0]/50 text-[#00A8B0] hover:border-[#00A8B0] hover:bg-[#00A8B0]/10"
@@ -167,25 +167,7 @@ export default function HeroBanner() {
           </a>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-8 sm:gap-16 animate-fade-up delay-400">
-          <div className="flex flex-col items-center gap-1">
-            <span className={`text-3xl font-extrabold font-mono ${isDark ? "text-white" : "text-gray-900"}`}>12K+</span>
-            <span className={`text-xs tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>{t("hero.stat1_label")}</span>
-          </div>
-          <div className={`hidden sm:block w-px h-8 ${isDark ? "bg-[#00F5FF]/20" : "bg-gray-300"}`} />
-          <div className="flex flex-col items-center gap-1">
-            <span className={`text-3xl font-extrabold font-mono ${isDark ? "text-white" : "text-gray-900"}`}>340+</span>
-            <span className={`text-xs tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>{t("hero.stat2_label")}</span>
-          </div>
-          <div className={`hidden sm:block w-px h-8 ${isDark ? "bg-[#00F5FF]/20" : "bg-gray-300"}`} />
-          <div className="flex flex-col items-center gap-1.5">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#39FF14] animate-pulse" style={{ boxShadow: "0 0 8px #39FF14" }} />
-              <span className={`text-3xl font-extrabold font-mono ${isDark ? "text-white" : "text-gray-900"}`}>LIVE</span>
-            </div>
-            <span className={`text-xs tracking-wide ${isDark ? "text-gray-400" : "text-gray-500"}`}>{t("hero.stat3_label")}</span>
-          </div>
-        </div>
+
       </div>
 
       <div className={`absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce ${isDark ? "text-gray-500" : "text-gray-400"}`}>

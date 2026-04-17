@@ -99,15 +99,15 @@ export default function ThreatNewsSection() {
   const textItems = newsData.filter((n) => n.type === "text");
 
   return (
-    <section id="news" className={`py-24 px-6 ${isDark ? "bg-[#0A0C10]" : "bg-[#F7F9FB]"}`}>
+    <section id="news" className={`py-16 md:py-24 px-4 md:px-6 ${isDark ? "bg-[#0A0C10]" : "bg-[#F7F9FB]"}`}>
       <div className="max-w-[1400px] mx-auto">
-        <div data-reveal="" className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+        <div data-reveal="" className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-12 gap-4 md:gap-6">
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" style={{ boxShadow: "0 0 8px #ef4444" }} />
               <span className="text-xs font-mono font-semibold tracking-widest text-red-400">{t("news.section_label")}</span>
             </div>
-            <h2 className={`text-4xl md:text-5xl font-extrabold leading-tight ${isDark ? "text-white" : "text-gray-900"}`}>{t("news.section_title")}</h2>
+            <h2 className={`text-3xl md:text-5xl font-extrabold leading-tight ${isDark ? "text-white" : "text-gray-900"}`}>{t("news.section_title")}</h2>
             <p className={`mt-3 max-w-xl text-sm leading-relaxed ${isDark ? "text-gray-400" : "text-gray-500"}`}>{t("news.section_subtitle")}</p>
           </div>
           <a

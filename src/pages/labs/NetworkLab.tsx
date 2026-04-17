@@ -1,6 +1,8 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useTheme } from "@/hooks/useTheme";
+import LabCompletionOverlay, { type LabCompletionConfig } from "@/pages/labs/components/LabCompletionOverlay";
 
 type ScanResult = {
   ip: string;
@@ -192,6 +194,7 @@ const sevColor = {
 
 export default function NetworkLab() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
   const [target, setTarget] = useState("");
@@ -202,6 +205,9 @@ export default function NetworkLab() {
   const [history, setHistory] = useState<string[]>([]);
   const [expandedVuln, setExpandedVuln] = useState<number | null>(null);
   const [scannedAll, setScannedAll] = useState<Set<string>>(new Set());
+  const [showCompletion, setShowCompletion] = useState(false);
+
+  const totalHosts = Object.keys(simulatedHosts).length;
 
   const bg = isDark ? "bg-[#0A0C10]" : "bg-[#F0F4F8]";
   const cardBg = isDark ? "bg-[#13161E] border-white/5" : "bg-white border-gray-200";
@@ -237,30 +243,74 @@ export default function NetworkLab() {
     if (found) {
       setResult(found);
       setHistory((prev) => [t, ...prev.filter((h) => h !== t)].slice(0, 6));
-      setScannedAll((prev) => new Set([...prev, t]));
+      setScannedAll((prev) => {
+        const next = new Set([...prev, t]);
+        if (next.size === totalHosts) {
+          setTimeout(() => setShowCompletion(true), 900);
+        }
+        return next;
+      });
     } else {
       setError(`Host ${t} returned no response (filtered or offline). Available targets: ${Object.keys(simulatedHosts).join(", ")}`);
     }
-  }, [target]);
+  }, [target, totalHosts]);
+
+  const handleReplay = () => {
+    setShowCompletion(false);
+    setScannedAll(new Set());
+    setResult(null);
+    setHistory([]);
+    setTarget("");
+  };
+
+  const netConfig: LabCompletionConfig = {
+    badgeLabel: t("completion.net_badge_label"),
+    title: t("completion.net_title"),
+    subtitle: t("completion.net_subtitle"),
+    score: 500,
+    rankValue: t("completion.net_rank_value"),
+    accentColor: "#00F5FF",
+    certPrefix: t("completion.net_cert_prefix"),
+    completedCount: scannedAll.size,
+    totalCount: totalHosts,
+    unitLabel: t("completion.net_unit_label"),
+    nextLabRoute: "/labs/terminal",
+    nextLabLabel: t("completion.net_next_lab_btn"),
+    stats: [
+      [t("completion.score_label"), "500"],
+      [t("completion.net_hosts_label"), t("completion.net_hosts_value")],
+      [t("completion.net_vulns_label"), t("completion.net_vulns_value")],
+    ],
+    skills: [
+      { label: t("completion.net_skill_recon"), icon: "ri-search-2-line", color: isDark ? "text-[#00F5FF]" : "text-[#00A8B0]" },
+      { label: t("completion.net_skill_ports"), icon: "ri-door-open-line", color: isDark ? "text-[#39FF14]" : "text-emerald-600" },
+      { label: t("completion.net_skill_cve"), icon: "ri-bug-line", color: "text-rose-400" },
+      { label: t("completion.net_skill_os"), icon: "ri-computer-line", color: "text-amber-400" },
+      { label: t("completion.net_skill_risk"), icon: "ri-shield-line", color: "text-orange-400" },
+    ],
+  };
 
   return (
     <div className={`min-h-screen ${bg} ${textPrimary}`}>
+      {showCompletion && (
+        <LabCompletionOverlay config={netConfig} onReplay={handleReplay} />
+      )}
       <div className={`border-b ${topBar}`}>
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500" />
-            <div className="w-3 h-3 rounded-full bg-yellow-500" />
-            <div className="w-3 h-3 rounded-full bg-[#39FF14]" />
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center gap-3 md:gap-4">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+            <div className="w-2.5 h-2.5 rounded-full bg-[#39FF14]" />
           </div>
-          <span className={`text-xs font-mono ${textMuted}`}>vantix — network-scanner-lab</span>
+          <span className={`text-xs font-mono hidden sm:block ${textMuted}`}>vantix — network-scanner-lab</span>
           <button
             onClick={() => navigate("/")}
-            className={`flex items-center gap-2 text-xs font-mono border px-4 py-1.5 rounded-full cursor-pointer transition-colors whitespace-nowrap ${isDark ? "text-gray-400 hover:text-white border-white/10 hover:border-white/30" : "text-gray-500 hover:text-gray-800 border-gray-200 hover:border-gray-400"}`}
+            className={`flex items-center gap-2 text-xs font-mono border px-3 md:px-4 py-1.5 rounded-full cursor-pointer transition-colors whitespace-nowrap ${isDark ? "text-gray-400 hover:text-white border-white/10 hover:border-white/30" : "text-gray-500 hover:text-gray-800 border-gray-200 hover:border-gray-400"}`}
           >
             <span className="w-3 h-3 flex items-center justify-center"><i className="ri-arrow-left-line" /></span>
-            Back
+            {t("labs.back")}
           </button>
-          <div className="ml-auto flex items-center gap-4">
+          <div className="ml-auto flex items-center gap-3">
             <button
               onClick={toggleTheme}
               className={`w-7 h-7 flex items-center justify-center rounded-full border cursor-pointer transition-colors ${isDark ? "border-white/10 text-gray-400 hover:text-white hover:border-white/30" : "border-gray-200 text-gray-500 hover:text-gray-800 hover:border-gray-400"}`}
@@ -270,16 +320,16 @@ export default function NetworkLab() {
             </button>
             <div className={`flex items-center gap-2 text-[10px] font-mono ${textMuted}`}>
               <span className={isDark ? "text-[#00F5FF]" : "text-[#00A8B0]"}>{scannedAll.size}</span>/<span>{Object.keys(simulatedHosts).length}</span>
-              <span>hosts scanned</span>
+              <span className="hidden sm:inline">{t("labs.hosts_scanned")}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-10">
-        <div className="mb-8 animate-fade-up">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-10">
+        <div className="mb-6 md:mb-8 animate-fade-up">
           <span className={`text-[10px] font-mono tracking-widest mb-2 block ${isDark ? "text-[#00F5FF]" : "text-[#00A8B0]"}`}>[ NETWORK PENTESTING LAB ]</span>
-          <h1 className={`text-3xl md:text-4xl font-extrabold mb-3 ${textPrimary}`}>Network Penetration Testing</h1>
+          <h1 className={`text-2xl md:text-4xl font-extrabold mb-3 ${textPrimary}`}>Network Penetration Testing</h1>
           <p className={`text-sm leading-relaxed max-w-2xl ${textSecondary}`}>
             Simulate a real network reconnaissance engagement. Scan 5 virtual hosts, identify open ports, detect OS versions,
             analyze CVEs, and understand what each vulnerability means for an attacker.
@@ -287,7 +337,7 @@ export default function NetworkLab() {
         </div>
 
         {/* Recon concepts */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 animate-fade-up delay-100">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 md:mb-8 animate-fade-up delay-100">
           {[
             { icon: "ri-search-2-line", color: isDark ? "text-[#00F5FF]" : "text-[#00A8B0]", title: "1. Reconnaissance", desc: "Discover live hosts on a network using techniques like ARP scanning, ping sweeps, and TCP SYN probes. Identify which machines are worth investigating." },
             { icon: "ri-door-open-line", color: isDark ? "text-[#39FF14]" : "text-emerald-600", title: "2. Port & Service Scanning", desc: "Enumerate open TCP/UDP ports on each host. Each open port is a potential attack vector — especially old, vulnerable service versions." },
@@ -305,7 +355,7 @@ export default function NetworkLab() {
 
         {/* Mission checklist */}
         <div className={`border rounded-xl px-5 py-4 mb-8 ${isDark ? "bg-[#13161E] border-[#00F5FF]/20" : "bg-[#00A8B0]/5 border-[#00A8B0]/20"}`}>
-          <p className={`text-[10px] font-mono mb-3 tracking-wider ${isDark ? "text-[#00F5FF]" : "text-[#00A8B0]"}`}>ENGAGEMENT OBJECTIVES</p>
+          <p className={`text-[10px] font-mono mb-3 tracking-wider ${isDark ? "text-[#00F5FF]" : "text-[#00A8B0]"}`}>{t("labs.engagement_objectives")}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {Object.values(simulatedHosts).map((h) => (
               <div key={h.ip} className={`flex items-center gap-2 text-xs font-mono`}>
@@ -326,11 +376,11 @@ export default function NetworkLab() {
             <span className={`w-5 h-5 flex items-center justify-center ${isDark ? "text-[#00F5FF]" : "text-[#00A8B0]"}`}>
               <i className="ri-radar-line text-base" />
             </span>
-            <span className={`text-xs font-mono font-bold tracking-wide ${textPrimary}`}>PORT SCANNER</span>
-            <span className={`ml-auto text-[10px] font-mono ${textMuted}`}>nmap-style simulation</span>
+            <span className={`text-xs font-mono font-bold tracking-wide ${textPrimary}`}>{t("labs.port_scanner")}</span>
+            <span className={`ml-auto text-[10px] font-mono ${textMuted}`}>{t("labs.mission_checklist")}</span>
           </div>
           <div className="p-6 space-y-4">
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <input
                 type="text"
                 value={target}
@@ -342,14 +392,14 @@ export default function NetworkLab() {
               <button
                 onClick={() => runScan()}
                 disabled={scanning}
-                className={`px-6 py-3 border text-sm font-bold rounded-xl transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed ${isDark ? "bg-[#00F5FF]/10 border-[#00F5FF]/30 text-[#00F5FF] hover:bg-[#00F5FF]/20" : "bg-[#00A8B0]/10 border-[#00A8B0]/30 text-[#00A8B0] hover:bg-[#00A8B0]/20"}`}
+                className={`w-full sm:w-auto px-6 py-3 border text-sm font-bold rounded-xl transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed ${isDark ? "bg-[#00F5FF]/10 border-[#00F5FF]/30 text-[#00F5FF] hover:bg-[#00F5FF]/20" : "bg-[#00A8B0]/10 border-[#00A8B0]/30 text-[#00A8B0] hover:bg-[#00A8B0]/20"}`}
               >
-                {scanning ? "Scanning..." : "Scan Target"}
+                {scanning ? t("labs.scanning") : t("labs.scan_target")}
               </button>
             </div>
 
             <div>
-              <p className={`text-[10px] font-mono mb-2 ${textMuted}`}>AVAILABLE TARGETS — click to scan:</p>
+              <p className={`text-[10px] font-mono mb-2 ${textMuted}`}>{t("labs.available_targets")}</p>
               <div className="flex flex-wrap gap-2">
                 {Object.values(simulatedHosts).map((h) => (
                   <button
@@ -527,7 +577,7 @@ export default function NetworkLab() {
         {/* Scan history */}
         {history.length > 0 && (
           <div className={`mt-8 border rounded-2xl p-5 ${cardBg}`}>
-            <p className={`text-[10px] font-mono mb-3 tracking-wider ${textMuted}`}>SCAN HISTORY</p>
+            <p className={`text-[10px] font-mono mb-3 tracking-wider ${textMuted}`}>{t("labs.scan_history")}</p>
             <div className="flex flex-wrap gap-2">
               {history.map((ip) => (
                 <button
