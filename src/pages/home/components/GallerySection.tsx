@@ -3,31 +3,31 @@ const images = [
     src: 'https://readdy.ai/api/search-image?query=engineer%20wearing%20augmented%20reality%20smart%20glasses%20in%20petroleum%20refinery%20facility%2C%20green%20HUD%20data%20overlay%2C%20advanced%20technology%2C%20industrial%20setting%2C%20dramatic%20cinematic%20lighting%2C%20photorealistic%2C%20dark%20moody%20atmosphere&width=800&height=600&seq=gal001&orientation=landscape',
     label: 'Operador com AR no Campo',
     span: 'md:col-span-2 md:row-span-2',
-    href: 'https://www.realwear.com/industries/energy/',
+    href: 'https://www.ptc.com/en/products/vuforia',
   },
   {
     src: 'https://readdy.ai/api/search-image?query=close%20up%20augmented%20reality%20smart%20glasses%20displaying%20digital%20data%20overlay%2C%20biometric%20authentication%2C%20futuristic%20wearable%20tech%2C%20dark%20background%2C%20neon%20green%20interface%2C%20high-tech%20product%20photography&width=600&height=400&seq=gal002&orientation=landscape',
     label: 'Interface de Autenticação AR',
     span: '',
-    href: 'https://www.nist.gov/identity-access-management',
+    href: 'https://www.ibm.com/think/topics/authentication',
   },
   {
     src: 'https://readdy.ai/api/search-image?query=artificial%20intelligence%20neural%20network%20visualization%2C%20data%20security%20encryption%2C%20cybersecurity%20digital%20shield%20glowing%2C%20dark%20background%2C%20neon%20green%20and%20blue%20particles%2C%20abstract%20technology%20art&width=600&height=400&seq=gal003&orientation=landscape',
     label: 'Proteção de Dados por IA',
     span: '',
-    href: 'https://www.csoonline.com/article/3654825/what-is-data-loss-prevention-dlp-and-how-does-it-work.html',
+    href: 'https://www.crowdstrike.com/en-us/cybersecurity-101/artificial-intelligence/',
   },
   {
     src: 'https://readdy.ai/api/search-image?query=petrobras%20oil%20platform%20offshore%20at%20sunset%2C%20industrial%20technology%2C%20dramatic%20sky%2C%20modern%20engineering%2C%20powerful%20energy%20infrastructure%2C%20cinematic%20photography&width=600&height=400&seq=gal004&orientation=landscape',
     label: 'Infraestrutura Petrobras',
     span: '',
-    href: 'https://petrobras.com.br/en/',
+    href: 'https://www.cisa.gov/topics/industrial-control-systems',
   },
   {
     src: 'https://readdy.ai/api/search-image?query=secure%20corporate%20digital%20authentication%20system%2C%20biometric%20fingerprint%20scan%20glowing%20interface%2C%20access%20control%20panel%2C%20dark%20tech%20environment%2C%20neon%20green%20light%20effects%2C%20cyberpunk%20aesthetic&width=600&height=400&seq=gal005&orientation=landscape',
     label: 'Sistema de Autenticação',
     span: '',
-    href: 'https://www.cisa.gov/mfa',
+    href: 'https://www.ibm.com/think/topics/identity-access-management',
   },
 ];
 
